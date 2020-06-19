@@ -30,12 +30,13 @@ def get_posts(owner_id, vkapi, count, query):
         owner_id=owner_id, count=count, query=query, v=5.92)['items']
 
     for item in posts_list:
-        post = item['text']
+        if item['post_type'] == 'post':
+            post = item['text']
 
-        post_texts.append([{'post': item['text'], 'date': item['date'],
-                            'url': 'https://vk.com/wall{}_{}'.format(item['owner_id'], item['id'])}])
+            post_texts.append([{'post': item['text'], 'date': item['date'],
+                                'url': 'https://vk.com/wall{}_{}'.format(item['owner_id'], item['id'])}])
 
     return post_texts
 
 
-print(get_posts(owner_id='-109125816', vkapi=vkapi, count=10, query='Салат'))
+print(get_posts(owner_id='-109125816', vkapi=vkapi, count=10, query='салат'))
