@@ -56,8 +56,8 @@ def parse_adress_from_photo(item):
         attachments = item['attachments']
         if attachments:
             for attach in attachments:
-                type = attach['type']
-                if type == "photo":
+                type_attachment = attach['type']
+                if type_attachment == "photo":
                     photo = attach['photo']
                     if photo['lat']:
                         lat = photo['lat']
