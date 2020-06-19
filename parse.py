@@ -5,7 +5,6 @@ access_token = "28f1ebfa28f1ebfa28f1ebfad528835af6228f128f1ebfa761ce2e835425078a
 session = vk.Session(access_token=access_token)
 vkapi = vk.API(session)
 
-
 relevant_groups = [-109125816, -70298501, -112367858]
 
 # Научиться получать все посты из группы
