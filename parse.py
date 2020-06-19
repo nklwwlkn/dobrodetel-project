@@ -6,6 +6,8 @@ session = vk.Session(access_token=access_token)
 vkapi = vk.API(session)
 
 
+relevant_groups = [-109125816, -70298501, -112367858]
+
 # Научиться получать все посты из группы
 # каждый пост форматировать в JSON {Location, posrt, url}
 # Написать функцию по парсингу постов из релевантных групп
@@ -21,18 +23,19 @@ vkapi = vk.API(session)
  """
 
 
-def get_posts(owner_id, vkapi, count):
+def get_posts(owner_id, vkapi, count, query):
     post_texts = []
 
-    posts_list = vkapi.wall.get(
-        owner_id=owner_id, count=count, v=5.92)['items']
+    posts_list = vkapi.wall.search(
+        owner_id=owner_id, count=count, query=query, v=5.92)['items']
 
     for item in posts_list:
         post = item['text']
 
-        post_texts.append([post])
+        post_texts.append([{'post': item['text'], 'date': item['date'],
+                            'url': 'https://vk.com/wall{}_{}'.format(item['owner_id'], item['id'])}])
 
     return post_texts
 
 
-print(get_posts(owner_id='-109125816', vkapi=vkapi, count=10))
+print(get_posts(owner_id='-109125816', vkapi=vkapi, count=10, query='Салат'))
