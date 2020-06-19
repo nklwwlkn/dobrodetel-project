@@ -17,13 +17,15 @@ relevant_groups = [-109125816, -70298501, -112367858]
 # Написать функцию бан-вордов
 # Добавить то, что забыл
 
-"""  def is_baned_words(text):
-    banned_words = ['Продам', 'продам', 'конкурс', 'Конкурс']
-        for banned in banned_words:
-            if banned in text:
-                return True
-    return False
- """
+
+""" def has_banned_words(text):
+    banned = ['Конкурс', 'конкурс', 'викторина', 'Викторина',
+              'победил', 'Победил', 'победитель', 'Победитель', 'Розыгрыши', 'розыгрышы']
+
+    for word in banned:
+        if word in text:
+            return True
+    return False """
 
 
 def get_posts(owner_id, vkapi, count, query, adress):
@@ -41,7 +43,6 @@ def get_posts(owner_id, vkapi, count, query, adress):
                                 'url': 'https://vk.com/wall{}_{}'.format(item['owner_id'], item['id'])}])
         post = item['text']
         print(post + "\n")
-        post_texts.append([post])
         parse_adress_from_photo(item)
 
     return post_texts
@@ -85,4 +86,5 @@ def haversine(coord1, coord2):
     return 2 * R * math.atan2(math.sqrt(a), math.sqrt(1 - a))
 
 
-print(get_posts(owner_id='-109125816', vkapi=vkapi, count=10, query='салат', adress="Набережная Волжской Флотилии 1"))
+print(get_posts(owner_id='-109125816', vkapi=vkapi, count=10,
+                query='Конкурс', adress="Набережная Волжской Флотилии 1"))

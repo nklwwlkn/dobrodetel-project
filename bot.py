@@ -1,5 +1,6 @@
 import telebot
 import logging
+from parse import *
 from telebot import types
 
 bot = telebot.TeleBot('948522010:AAG3dBL2W-NWPpdnOnuj-a15lOZ0dWlAv1o')
@@ -23,12 +24,13 @@ def send_welcome(message):
 @bot.callback_query_handler(func=lambda call: True)
 def callback_worker(call):
     if call.data == "continue":  # call.data это callback_data, которую мы указали при объявлении кнопки
-        bot.edit_message_text(chat_id=call.message.chat.id, message_id=call.message.message_id,text='Ваш ответ: Далее', reply_markup='', parse_mode='Markdown')
+        # Посмотреть задержку, вроде как не получается после edit'a сразу отправлять сообщение
+        bot.edit_message_text(chat_id=call.message.chat.id, message_id=call.message.message_id,text='Ваш ответ: Далее', reply_markup='')
 
     elif call.data == "no-interesting":
         bot.edit_message_text(chat_id=call.message.chat.id, message_id=call.message.message_id, text='Ваш ответ: Не '
                                                                                                      'интересно',
-                              reply_markup='', parse_mode='Markdown')
+                              reply_markup='')
 
 
 @bot.message_handler(commands=['help'])
@@ -43,6 +45,10 @@ def get_text_messages(message):
                                                "Ну что же, поведайте мне, где вы живете (ветка Метро)")
     elif message.text == "Помогите":
         bot.send_message(message.from_user.id, "Поможем !")
+    elif message.text == "Парсинг":
+        posts_list = get_posts(owner_id='-109125816', vkapi=vkapi, count=6, query='салат', adress="Набережная Волжской Флотилии 1")
+        for post in posts_list:
+            bot.send_message(message.from_user.id, "Вот что я спарсил : {}".format(post))
     else:
         bot.send_message(message.from_user.id, "Я тебя не понимаю. Напиши /help.")
 
