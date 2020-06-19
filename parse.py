@@ -6,6 +6,12 @@ session = vk.Session(access_token=access_token)
 vkapi = vk.API(session)
 
 
+# Научиться получать все посты из группы
+# каждый пост форматировать в JSON {Location, posrt, url}
+# Написать функцию по парсингу постов из релевантных групп
+# Написать функцию бан-вордов
+# Добавить то, что забыл
+
 """  def is_baned_words(text):
     banned_words = ['Продам', 'продам', 'конкурс', 'Конкурс']
         for banned in banned_words:
