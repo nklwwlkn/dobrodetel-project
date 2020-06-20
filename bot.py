@@ -48,7 +48,9 @@ def get_text_messages(message):
     elif message.text == "Парсинг":
         posts_list = get_posts(owner_id='-109125816', vkapi=vkapi, count=6, query='салат', adress="Набережная Волжской Флотилии 1")
         for post in posts_list:
-            bot.send_message(message.from_user.id, "Вот что я спарсил : {}".format(post))
+            post_text = post['post']
+            post_url = post['url']
+            bot.send_message(message.from_user.id, "Объявление: {} \nПерейти: {}".format(post_text, post_url))
     else:
         bot.send_message(message.from_user.id, "Я тебя не понимаю. Напиши /help.")
 

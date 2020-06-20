@@ -50,8 +50,8 @@ def get_posts(owner_id, vkapi, count, query, adress):
 
     for item in posts_list:
         if item['post_type'] == 'post':
-            post_texts.append([{'post': item['text'], 'date': item['date'],
-                                'url': 'https://vk.com/wall{}_{}'.format(item['owner_id'], item['id'])}])
+            post_texts.append({'post': item['text'], 'date': item['date'],
+                                'url': 'https://vk.com/wall{}_{}'.format(item['owner_id'], item['id'])})
             post = item['text']
             print(post + "\n")
             adress_distribution = parse_adress_from_photo(item)
@@ -103,5 +103,4 @@ def haversine(coord1, coord2):
     return 2 * R * math.atan2(math.sqrt(a), math.sqrt(1 - a))
 
 
-print(get_posts(owner_id='-109125816', vkapi=vkapi, count=10,
-                query='салат', adress="Набережная волжской флотилии 1"))
+# print(get_posts(owner_id='-109125816', vkapi=vkapi, count=10,query='салат', adress="Набережная волжской флотилии 1"))
