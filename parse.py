@@ -20,7 +20,7 @@ savedPostsList = []
 
 
 def convert_string_to_list(catalog):
-    catalog_list = catalog.replace(',', '').split()
+    catalog_list = catalog.replace(',', ' ').split()
     return catalog_list
 
 
