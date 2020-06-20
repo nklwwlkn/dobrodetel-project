@@ -11,6 +11,8 @@ city = "Москва,"
 
 radius = 0
 street = ""
+
+offset = 0
 catalogList = []
 
 
@@ -21,6 +23,7 @@ def convert_string_to_list(catalog):
 
 relevant_groups = [-109125816, -70298501, -112367858]
 
+
 # Научиться получать все посты из группы CLOSE
 # каждый пост форматировать в JSON {Location, posrt, url} CLOSE
 # Написать функцию по парсингу постов из релевантных групп CLOSE
@@ -30,33 +33,41 @@ relevant_groups = [-109125816, -70298501, -112367858]
 # Добавить то, что забыл
 
 
-""" def has_banned_words(text):
+def has_banned_words(text):
     banned = ['Конкурс', 'конкурс', 'викторина', 'Викторина',
-              'победил', 'Победил', 'победитель', 'Победитель', 'Розыгрыши', 'розыгрышы']
+              'победил', 'Победил', 'победитель', 'Победитель', 'Розыгрыши', 'розыгрышы',
+              'СТОП', 'Забрали', 'Отдано', 'Стоп', 'ЗАБРАЛИ', 'ОТДАНО']
 
     for word in banned:
         if word in text:
             return True
-    return False """
+    return False
 
 
 def get_posts(owner_id, vkapi, count, query, adress):
+    global offset
     post_texts = []
-    adress_user = convert_adress_to_coordinates(adress)
-    convert_string_to_list("рис, еда, какашки, владос пукнул")
+    adress_user = convert_adress_to_coordinates(city + adress)
+
+    convert_string_to_list("рис, еда, вода, пиво сухарики")
 
     posts_list = vkapi.wall.search(
-        owner_id=owner_id, count=count, query=query, v=5.92)['items']
+        owner_id=owner_id, count=count, query=query, v=5.92, offset=offset)['items']
 
+    offset += 1
+
+    print(offset)
     for item in posts_list:
         if item['post_type'] == 'post':
-            post_texts.append({'post': item['text'], 'date': item['date'],
-                                'url': 'https://vk.com/wall{}_{}'.format(item['owner_id'], item['id'])})
-            post = item['text']
-            print(post + "\n")
-            adress_distribution = parse_adress_from_photo(item)
-            if adress_distribution and adress_user:
-                distance = haversine(adress_distribution, adress_user)
+            if not has_banned_words(item['text']):
+                post_texts.append({'post': item['text'], 'date': item['date'],
+                                   'url': 'https://vk.com/wall{}_{}'.format(item['owner_id'], item['id'])})
+                post = item['text']
+                print(post + "\n")
+                adress_distribution = parse_adress_from_photo(item)
+                if adress_distribution and adress_user:
+                    distance = haversine(adress_distribution, adress_user)
+                    print(distance)
 
     return post_texts
 
@@ -80,6 +91,7 @@ def parse_adress_from_photo(item):
                     if photo['lat']:
                         lat = photo['lat']
                         long = photo['long']
+
                         return lat, long
 
         return None
@@ -103,4 +115,4 @@ def haversine(coord1, coord2):
     return 2 * R * math.atan2(math.sqrt(a), math.sqrt(1 - a))
 
 
-# print(get_posts(owner_id='-109125816', vkapi=vkapi, count=10,query='салат', adress="Набережная волжской флотилии 1"))
+print(get_posts(owner_id='-109125816', vkapi=vkapi, count=50, query='салат', adress="Бобруйская улица 20"))
