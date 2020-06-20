@@ -23,7 +23,21 @@ catalogList = []
 
 def convert_string_to_list(catalog):
     catalog_list = catalog.replace(',', '').split()
-    print(catalog_list)
+    return catalog_list
+
+
+def get_product_list(category):
+    print(len(category))
+    all_category_post = []
+    for product in category:
+        posts_list = get_posts(owner_id='-109125816', vkapi=vkapi, count=10, query=product,
+                               adress="Москва,Бобруйская улица 20")
+        for post in posts_list:
+            if not has_banned_words(post['post']):
+                post_text = post['post']
+                post_url = post['url']
+                all_category_post.append({'post': post_text, 'url': post_url})
+    return all_category_post
 
 
 relevant_groups = [-109125816, -70298501, -112367858]
