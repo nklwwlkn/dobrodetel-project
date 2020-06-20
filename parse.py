@@ -1,7 +1,12 @@
 import vk
 import json
 import math
+import time
+
+
 from geopy.geocoders import Nominatim
+
+now = str(time.time()).split('.')[0]
 
 access_token = "28f1ebfa28f1ebfa28f1ebfad528835af6228f128f1ebfa761ce2e835425078a1233e1e"
 session = vk.Session(access_token=access_token)
@@ -36,7 +41,7 @@ relevant_groups = [-109125816, -70298501, -112367858]
 def has_banned_words(text):
     banned = ['Конкурс', 'конкурс', 'викторина', 'Викторина',
               'победил', 'Победил', 'победитель', 'Победитель', 'Розыгрыши', 'розыгрышы',
-              'СТОП', 'Забрали', 'Отдано', 'Стоп', 'ЗАБРАЛИ', 'ОТДАНО']
+              'СТОП', 'Забрали', 'Отдано', 'Стоп', 'ЗАБРАЛИ', 'ОТДАНО', 'спасли', 'Спасли', 'СПАСЛИ']
 
     for word in banned:
         if word in text:
@@ -60,10 +65,15 @@ def get_posts(owner_id, vkapi, count, query, adress):
     for item in posts_list:
         if item['post_type'] == 'post':
             if not has_banned_words(item['text']):
-                post_texts.append({'post': item['text'], 'date': item['date'],
-                                   'url': 'https://vk.com/wall{}_{}'.format(item['owner_id'], item['id'])})
-                post = item['text']
-                print(post + "\n")
+                # проверить:
+
+                print(int(item['date']), (int(now) - 72 * 60 * 60))
+                if item['date'] > (int(now) - 150 * 60 * 60):
+                    # проверить:
+                    post_texts.append({'post': item['text'], 'date': item['date'],
+                                       'url': 'https://vk.com/wall{}_{}'.format(item['owner_id'], item['id'])})
+                    post = item['text']
+                    print(post + "\n")
                 adress_distribution = parse_adress_from_photo(item)
                 if adress_distribution and adress_user:
                     distance = haversine(adress_distribution, adress_user)
@@ -96,7 +106,7 @@ def parse_adress_from_photo(item):
 
         return None
     except:
-        print("Something went wrong...")
+        print("Проблема с парсингом адреса")
         return None
 
 
@@ -115,4 +125,5 @@ def haversine(coord1, coord2):
     return 2 * R * math.atan2(math.sqrt(a), math.sqrt(1 - a))
 
 
-print(get_posts(owner_id='-109125816', vkapi=vkapi, count=50, query='салат', adress="Бобруйская улица 20"))
+print(get_posts(owner_id='-109125816', vkapi=vkapi,
+                count=20, query='Молоко', adress=""))
