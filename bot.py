@@ -2,35 +2,95 @@ import telebot
 import logging
 from parse import *
 from telebot import types
+from time import sleep
 
 bot = telebot.TeleBot('948522010:AAG3dBL2W-NWPpdnOnuj-a15lOZ0dWlAv1o')
 logger = telebot.logger
 telebot.logger.setLevel(logging.DEBUG)  # Outputs debug messages to console.
 
+# GLOBAL Param
+user_street = 'Набережная волжской флотилии 1'
+user_radius = 5
+user_category = []
+
+"""
+@bot.callback_query_handler(func=lambda call: call.data == 'continue')
+def callback_inline_first(message):
+    ...
+"""
+
 
 @bot.message_handler(commands=['start'])
 def send_welcome(message):
-    bot.send_message(message.from_user.id, "Привет , это бот 'Добродетель' , расскажи , чего ты хочешь от этой жизни")
-    bot.send_message(message.from_user.id, "Вы готовы отправиться в увлекательное приключение ?")
+    bot.send_message(message.from_user.id,
+                     "Я создан для помощи людям, которые нуждаются в еде. С моей помощью вы сможете найти предложения об безвозмездной раздачи еды, которые интересны именно вам!")
     keyboard = types.InlineKeyboardMarkup()  # наша клавиатура
     key_yes = types.InlineKeyboardButton(text='Далее', callback_data='continue')  # кнопка
     keyboard.add(key_yes)  # добавляем кнопку в клавиатуру
-    key_no = types.InlineKeyboardButton(text='Не интересно', callback_data='no-interesting')
-    keyboard.add(key_no)
-    bot.send_message(message.from_user.id, 'Ваш ответ: ',
+    bot.send_message(message.from_user.id,
+                     'Для начала, давайте заполним первичную информацию о вас! \nДля продолжения нажмите "Далее"',
                      reply_markup=keyboard)
 
 
-@bot.callback_query_handler(func=lambda call: True)
-def callback_worker(call):
-    if call.data == "continue":  # call.data это callback_data, которую мы указали при объявлении кнопки
-        # Посмотреть задержку, вроде как не получается после edit'a сразу отправлять сообщение
-        bot.edit_message_text(chat_id=call.message.chat.id, message_id=call.message.message_id,text='Ваш ответ: Далее', reply_markup='')
+def get_from_user_posts(user_id, address):
+    posts_list = get_posts(owner_id='-109125816', vkapi=vkapi, count=6, query='салат',
+                           adress=address)
+    for post in posts_list:
+        post_text = post['post']
+        post_url = post['url']
+        bot.send_message(user_id, "Объявление: {} \nПерейти: {}".format(post_text, post_url))
+        sleep(1)
+        # lat, lon = convert_adress_to_coordinates("Набережная Волжской Флотилии 1")
+        # bot.send_location(message.chat.id, latitude=lat, longitude=lon)
 
-    elif call.data == "no-interesting":
-        bot.edit_message_text(chat_id=call.message.chat.id, message_id=call.message.message_id, text='Ваш ответ: Не '
-                                                                                                     'интересно',
-                              reply_markup='')
+
+@bot.callback_query_handler(func=lambda call: True)
+def callback_continue(call):
+    global user_street
+    if call.data == "continue":
+        bot.edit_message_text(chat_id=call.message.chat.id, message_id=call.message.message_id,
+                              text='Отлично, начнём наше знакомство', reply_markup='')
+        sleep(1)
+        bot.send_message(call.from_user.id, "Укажите улицу проживания (или другую удобную)")
+        bot.register_next_step_handler(call.message, get_user_street)
+    elif call.data == "post-yes":
+        bot.edit_message_text(chat_id=call.message.chat.id, message_id=call.message.message_id,
+                              text='Благодарим за ответ.', reply_markup='')
+        sleep(1)
+        bot.send_message(call.from_user.id, 'Хорошо , дайте мне немного времени...')
+        get_from_user_posts(call.from_user.id, user_street)
+    elif call.data == "post-no":
+        bot.edit_message_text(chat_id=call.message.chat.id, message_id=call.message.message_id,
+                              text='Благодарим за ответ.', reply_markup='')
+        sleep(1)
+        bot.send_message(call.from_user.id, 'Будем ждать вас!')
+
+
+def get_user_street(message):
+    global user_street
+    user_street = message.text
+    bot.send_message(message.from_user.id, 'Укажите радиус возможного получения товара(в км)')
+    bot.register_next_step_handler(message, get_user_radius)
+
+
+def get_user_radius(message):
+    global user_radius
+    user_radius = float(message.text)
+    bot.send_message(message.from_user.id, 'Укажите список категорий, которые удовлетворяют вашим потребностям(через запятую)')
+    bot.register_next_step_handler(message, get_user_category)
+
+
+def get_user_category(message):
+    global user_category
+    convert_string_to_list(message.text)
+    user_category = catalogList
+    print("User category lens: ", len(user_category))
+    keyboard = types.InlineKeyboardMarkup()  # наша клавиатура
+    key_yes = types.InlineKeyboardButton(text='Да', callback_data='post-yes')  # кнопка
+    keyboard.add(key_yes)  # добавляем кнопку в клавиатуру
+    key_no = types.InlineKeyboardButton(text='Нет', callback_data='post-no')  # кнопка
+    keyboard.add(key_no)  # добавляем кнопку в клавиатуру
+    bot.send_message(message.from_user.id, "Вы хотите получить список постов ?", reply_markup=keyboard)
 
 
 @bot.message_handler(commands=['help'])
@@ -40,17 +100,11 @@ def send_faq(message):
 
 @bot.message_handler(content_types=['text'])
 def get_text_messages(message):
-    if message.text == "Далее":
-        bot.send_message(message.from_user.id, "Приятно, что вы готовы к общению. \n"
-                                               "Ну что же, поведайте мне, где вы живете (ветка Метро)")
-    elif message.text == "Помогите":
+    if message.text == "Помогите":
         bot.send_message(message.from_user.id, "Поможем !")
-    elif message.text == "Парсинг":
-        posts_list = get_posts(owner_id='-109125816', vkapi=vkapi, count=6, query='салат', adress="Набережная Волжской Флотилии 1")
-        for post in posts_list:
-            post_text = post['post']
-            post_url = post['url']
-            bot.send_message(message.from_user.id, "Объявление: {} \nПерейти: {}".format(post_text, post_url))
+    elif message.text == "Посты":
+        global user_street
+        get_from_user_posts(message.from_user.id, user_street)
     else:
         bot.send_message(message.from_user.id, "Я тебя не понимаю. Напиши /help.")
 
