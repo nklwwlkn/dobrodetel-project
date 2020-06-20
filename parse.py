@@ -11,9 +11,8 @@ access_token = "28f1ebfa28f1ebfa28f1ebfad528835af6228f128f1ebfa761ce2e835425078a
 session = vk.Session(access_token=access_token)
 vkapi = vk.API(session)
 geolocator = Nominatim(user_agent="dobrodetel")
-city = "Москва,"
 
-radius = 0
+radius = 30
 street = ""
 
 catalogList = []
@@ -71,7 +70,7 @@ def difference(list1, list2):
 def get_posts(owner_id, vkapi, count, query, adress):
     global savedPostsList
     post_texts = []
-    adress_user = convert_adress_to_coordinates(city + adress)
+    adress_user = convert_adress_to_coordinates(adress)
 
     convert_string_to_list("рис, еда, вода, пиво сухарики")
 
@@ -86,7 +85,7 @@ def get_posts(owner_id, vkapi, count, query, adress):
                 if item['date'] > (int(now) - 150 * 60 * 60):
                     # проверить:
                     post = item['text']
-                    print(post)
+
 
                 adress_distribution = parse_adress_from_photo(item)
                 if adress_distribution and adress_user:
@@ -94,13 +93,15 @@ def get_posts(owner_id, vkapi, count, query, adress):
                     if distance <= radius * 1000:
                         post_texts.insert(0, {'post': item['text'], 'date': item['date'],
                                               'url': 'https://vk.com/wall{}_{}'.format(item['owner_id'], item['id'])})
-                    else:
+                        print(post)
+                        print(distance)
+                    """else:
                         post_texts.append({'post': item['text'], 'date': item['date'],
                                            'url': 'https://vk.com/wall{}_{}'.format(item['owner_id'], item['id'])})
 
                 else:
                     post_texts.append({'post': item['text'], 'date': item['date'],
-                                       'url': 'https://vk.com/wall{}_{}'.format(item['owner_id'], item['id'])})
+                                       'url': 'https://vk.com/wall{}_{}'.format(item['owner_id'], item['id'])})"""
 
     for diff in difference(savedPostsList, post_texts):
         savedPostsList.append(diff)
@@ -152,7 +153,7 @@ def haversine(coord1, coord2):
 
 
 print(get_posts(owner_id='-109125816', vkapi=vkapi,
-                count=20, query='Молоко', adress=""))
+                count=50, query='молоко', adress=""))
 
 """def test():
     get_posts(owner_id='-109125816', vkapi=vkapi,
