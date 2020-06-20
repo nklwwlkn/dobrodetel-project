@@ -1,38 +1,58 @@
 import sqlite3
-from sqlite3 import Error
-
-def post_sql_query(sql_query):
-    with sqlite3.connect('my.db') as connection:
-        cursor = connection.cursor()
-        try:
-            cursor.execute(sql_query)
-        except Error:
-            pass
-        result = cursor.fetchall()
-        return result
 
 
-def create_tables():
-    users_query = '''CREATE TABLE IF NOT EXISTS USERS 
-                        (user_id INTEGER PRIMARY KEY NOT NULL,
-                        username TEXT,
-                        first_name TEXT,
-                        last_name TEXT,
-                        reg_date TEXT);'''
-    post_sql_query(users_query)
+class DBHelper:
 
-def register_user(user, username, first_name, last_name):
-    user_check_query = 'SELECT * FROM USERS WHERE user_id = {user};'
-    user_check_data = post_sql_query(user_check_query)
-    if not user_check_data:
-        insert_to_db_query = 'INSERT INTO USERS (user_id, username, first_name,  last_name, reg_date) VALUES ({user}, "{username}", "{first_name}", "{last_name}", "{ctime()}");'
-        post_sql_query(insert_to_db_query )
+    def __init__(self, dbname="lizzy.sqlite"):
+        self.dbname = dbname
+        self.conn = sqlite3.connect(dbname, check_same_thread=False)
 
-create_tables()  # вызываем функцию создания таблицы users
+    def setup(self):
+        tblstmt = "CREATE TABLE IF NOT EXISTS userInfo (user_id INTEGER PRIMARY KEY NOT NULL, user_street text,user_radius INTEGER,user_category text)"
+        #liststmt = "CREATE TABLE IF NOT EXISTS lastSavedList (user_id INTEGER PRIMARY KEY NOT NULL, user_street text)"
+        self.conn.execute(tblstmt)
+        #self.conn.execute(liststmt)
+        self.conn.commit()
 
+    def is_user_register(self, user_id):
+        stmt = "SELECT * FROM userInfo WHERE user_id = (?)"
+        args = (user_id,)
+        user_check_data = [x[0] for x in self.conn.execute(stmt, args)]
+        if not user_check_data:
+            return False
+        else:
+            return True
 
-@bot.message_handler(commands=['start'])
-def start(message):
-    register_user(message.from_user.id, message.from_user.username,
-                  message.from_user.first_name, message.from_user.last_name)
-    bot.send_message(message.from_user.id, f'Welcome  {message.from_user.first_name}' )
+    def register_user(self, user_id, user_street, user_radius, user_category):
+        stmt = "SELECT * FROM userInfo WHERE user_id = (?)"
+        args = (user_id,)
+        user_check_data = [x[0] for x in self.conn.execute(stmt, args)]
+        if not user_check_data:
+            print("User not registered")
+            stmt = "INSERT INTO userInfo (user_id, user_street,user_radius,user_category) VALUES (?, ?, ?, ?)"
+            args = (user_id, user_street, user_radius, user_category)
+            self.conn.execute(stmt, args)
+            self.conn.commit()
+        else:
+            print("User registered")
+
+    def get_user_street(self, user_id):
+        stmt = "SELECT user_street FROM userInfo WHERE user_id = (?)"
+        args = (user_id,)
+        return [x[0] for x in self.conn.execute(stmt, args)]
+
+    def get_user_radius(self, user_id):
+        stmt = "SELECT user_radius FROM userInfo WHERE user_id = (?)"
+        args = (user_id,)
+        return [x[0] for x in self.conn.execute(stmt, args)]
+
+    def get_user_category(self, user_id):
+        stmt = "SELECT user_category FROM userInfo WHERE user_id = (?)"
+        args = (user_id,)
+        return [x[0] for x in self.conn.execute(stmt, args)]
+
+    def update_user_category(self, user_id,user_category):
+        stmt = "UPDATE userInfo SET user_category = (?) WHERE user_id = (?)"
+        args = (user_category,user_id)
+        self.conn.execute(stmt, args)
+        self.conn.commit()

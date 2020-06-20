@@ -1,6 +1,7 @@
 import telebot
 import logging
 from parse import *
+from db import *
 from telebot import types
 from time import sleep
 
@@ -10,8 +11,10 @@ telebot.logger.setLevel(logging.DEBUG)  # Outputs debug messages to console.
 
 # GLOBAL Param
 user_street = 'Москва, Бобруйская улица 20'
-user_radius = 5
-user_category = ["Молоко", "Квас", "Колбаса"]
+user_radius = 228
+user_category = ["Молоко"]
+
+dbs = DBHelper()
 
 """
 @bot.callback_query_handler(func=lambda call: call.data == 'continue')
@@ -22,6 +25,7 @@ def callback_inline_first(message):
 
 @bot.message_handler(commands=['start'])
 def send_welcome(message):
+    dbs.setup()
     keyboard = types.InlineKeyboardMarkup()  # наша клавиатура
     key_yes = types.InlineKeyboardButton(text='Далее', callback_data='continue')  # кнопка
     keyboard.add(key_yes)  # добавляем кнопку в клавиатуру
@@ -30,8 +34,15 @@ def send_welcome(message):
                      reply_markup=keyboard)
 
 
+def convert_list_to_sting(data_list):
+    text = data_list[0]
+    for i in range(len(data_list)-1):
+        text = text + ',' + data_list[i+1]
+    return text
+
+
 def get_from_user_posts(user_id, address, message=None):
-    posts_list = get_product_list(user_category)
+    posts_list = get_product_list(dbs.get_user_category(user_id))
     # posts_list = get_posts(owner_id='-109125816', vkapi=vkapi, count=10, query='Хлеб', adress=address)
     if len(posts_list) > 0:
         for post in posts_list:
@@ -69,7 +80,7 @@ def callback_continue(call):
 
         # Ошибка может быть тут
 
-        get_from_user_posts(call.from_user.id, user_street, call.message)
+        get_from_user_posts(call.from_user.id, dbs.get_user_street(call.from_user.id)[0], call.message)
     elif call.data == "update-new":
         bot.edit_message_text(chat_id=call.message.chat.id, message_id=call.message.message_id,
                               text='Напишите те продукты, в которых нуждаетесь', reply_markup='')
@@ -95,15 +106,15 @@ def get_user_street(message):
 
 def get_user_radius(message):
     global user_radius
-    user_radius = float(message.text)
+    user_radius = int(message.text)
     bot.send_message(message.from_user.id, 'Какие продукты Вам интересны? (молоко, рис, пицца)')
     bot.register_next_step_handler(message, get_user_category)
 
 
 def get_user_category(message):
-    global user_category
-    user_category = convert_string_to_list(message.text)
-    print("User category lens: ", len(user_category))
+
+    dbs.register_user(message.from_user.id, user_street, user_radius, message.text)
+
     keyboard = types.InlineKeyboardMarkup()  # наша клавиатура
     key_yes = types.InlineKeyboardButton(text='Да', callback_data='post-yes')  # кнопка
     keyboard.add(key_yes)  # добавляем кнопку в клавиатуру
@@ -116,38 +127,47 @@ def get_user_category(message):
 def send_faq(message):
     bot.send_message(message.from_user.id,
                      "Команда: /start - знакомит с ботом и предлагает повзаимодейтсвовать с ним \n"
-                     "Слово: Замена - позволяет заменить категорию продуктов \n"
+                     "Слово: Посты - позволяет посмотреть интересные для вас предложения \n"
+                     "Слово: Замена - позволяет заменить категорию продуктов "
                      )
 
 
 @bot.message_handler(content_types=['text'])
 def get_text_messages(message):
     if message.text == "Посты":
-        get_from_user_posts(message.from_user.id, user_street)
+        if dbs.is_user_register(message.from_user.id):
+            get_from_user_posts(message.from_user.id, dbs.get_user_street(message.from_user.id)[0])
+        else:
+            bot.send_message(message.from_user.id, "Вы ещё не прошли регистрацию. \nЧтобы её пройти, нажмите /start")
     elif message.text == "Замена":
-        #bot.send_message(message.from_user.id, "Категории которые сейчас: {}".format(user_category))
-        keyboard = types.InlineKeyboardMarkup()  # наша клавиатура
-        key_yes = types.InlineKeyboardButton(text='Добавить', callback_data='update-add')  # кнопка
-        keyboard.add(key_yes)  # добавляем кнопку в клавиатуру
-        key_no = types.InlineKeyboardButton(text='Изменить', callback_data='update-new')  # кнопка
-        keyboard.add(key_no)  # добавляем кнопку в клавиатуру
-        bot.send_message(message.from_user.id, "Хотите добавлить или изменить глобально", reply_markup=keyboard)
+        if dbs.is_user_register(message.from_user.id):
+            #get_from_user_posts(message.from_user.id, user_street)
+            #bot.send_message(message.from_user.id, "Категории которые сейчас: {}".format(user_category))
+            keyboard = types.InlineKeyboardMarkup()  # наша клавиатура
+            key_yes = types.InlineKeyboardButton(text='Добавить', callback_data='update-add')  # кнопка
+            keyboard.add(key_yes)  # добавляем кнопку в клавиатуру
+            key_no = types.InlineKeyboardButton(text='Изменить', callback_data='update-new')  # кнопка
+            keyboard.add(key_no)  # добавляем кнопку в клавиатуру
+            bot.send_message(message.from_user.id, "Хотите добавить или полностью изменить категории ?", reply_markup=keyboard)
+        else:
+            bot.send_message(message.from_user.id, "Вы ещё не прошли регистрацию. \nЧтобы её пройти, нажмите /start")
     else:
         bot.send_message(message.from_user.id, "Я тебя не понимаю. Напиши /help.")
 
 
 def update_product(message):
-    global user_category
-    user_category = convert_string_to_list(message.text)
-    #bot.send_message(message.from_user.id, "Обновленные категории: {}".format(user_category))
-    get_from_user_posts(message.from_user.id, user_street)
+    dbs.update_user_category(message.from_user.id, message.text)
+    bot.send_message(message.from_user.id, "Вот что я могу вам предложить")
+    get_from_user_posts(message.from_user.id, dbs.get_user_street(message.from_user.id)[0])
 
 
 def add_product(message):
-    new_product = convert_string_to_list(message.text)
-    for product in new_product:
-        user_category.append(product)
-    #bot.send_message(message.from_user.id, "Обновленные категории: {}".format(user_category))
+    print("DEBUG MODE old CATEGORY:", dbs.get_user_category(message.from_user.id)[0])
+    category_concatenate = dbs.get_user_category(message.from_user.id)[0] + ',' + message.text
+    dbs.update_user_category(message.from_user.id, category_concatenate)
+    print("DEBUG MODE NEW CATEGORY:",dbs.get_user_category(message.from_user.id)[0])
+    bot.send_message(message.from_user.id, "Вот что я могу вам предложить")
+    get_from_user_posts(message.from_user.id, dbs.get_user_street(message.from_user.id)[0])
 
 
 bot.polling(none_stop=True, interval=0)
