@@ -9,12 +9,24 @@ vkapi = vk.API(session)
 geolocator = Nominatim(user_agent="dobrodetel")
 city = "Москва,"
 
+radius = 0
+street = ""
+catalogList = []
+
+
+def convert_string_to_list(catalog):
+    catalog_list = catalog.replace(',', '').split()
+    print(catalog_list)
+
+
 relevant_groups = [-109125816, -70298501, -112367858]
 
-# Научиться получать все посты из группы
-# каждый пост форматировать в JSON {Location, posrt, url}
-# Написать функцию по парсингу постов из релевантных групп
+# Научиться получать все посты из группы CLOSE
+# каждый пост форматировать в JSON {Location, posrt, url} CLOSE
+# Написать функцию по парсингу постов из релевантных групп CLOSE
 # Написать функцию бан-вордов
+# Рассчитывать расстояние между двумя объектами CLOSE
+# Добавить пагинацию
 # Добавить то, что забыл
 
 
@@ -30,28 +42,31 @@ relevant_groups = [-109125816, -70298501, -112367858]
 
 def get_posts(owner_id, vkapi, count, query, adress):
     post_texts = []
-    adress_coordinates = convert_adress_to_coordinates(city + adress)
+    adress_user = convert_adress_to_coordinates(adress)
+    convert_string_to_list("рис, еда, какашки, владос пукнул")
 
     posts_list = vkapi.wall.search(
         owner_id=owner_id, count=count, query=query, v=5.92)['items']
 
     for item in posts_list:
         if item['post_type'] == 'post':
-            post = item['text']
-
             post_texts.append([{'post': item['text'], 'date': item['date'],
                                 'url': 'https://vk.com/wall{}_{}'.format(item['owner_id'], item['id'])}])
-        post = item['text']
-        print(post + "\n")
-        parse_adress_from_photo(item)
+            post = item['text']
+            print(post + "\n")
+            adress_distribution = parse_adress_from_photo(item)
+            if adress_distribution and adress_user:
+                distance = haversine(adress_distribution, adress_user)
 
     return post_texts
 
 
 def convert_adress_to_coordinates(adress):
     location = geolocator.geocode(adress)
-    print(location.latitude, location.longitude)
-    return location.latitude, location.longitude
+    if location:
+        return location.latitude, location.longitude
+    else:
+        return None
 
 
 def parse_adress_from_photo(item):
@@ -65,10 +80,12 @@ def parse_adress_from_photo(item):
                     if photo['lat']:
                         lat = photo['lat']
                         long = photo['long']
-                        break
+                        return lat, long
 
+        return None
     except:
         print("Something went wrong...")
+        return None
 
 
 def haversine(coord1, coord2):
@@ -87,4 +104,4 @@ def haversine(coord1, coord2):
 
 
 print(get_posts(owner_id='-109125816', vkapi=vkapi, count=10,
-                query='Конкурс', adress="Набережная Волжской Флотилии 1"))
+                query='салат', adress="Набережная волжской флотилии 1"))
