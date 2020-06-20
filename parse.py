@@ -16,8 +16,8 @@ city = "Москва,"
 radius = 0
 street = ""
 
-offset = 0
 catalogList = []
+savedPostsList = []
 
 
 def convert_string_to_list(catalog):
@@ -54,7 +54,8 @@ relevant_groups = [-109125816, -70298501, -112367858]
 def has_banned_words(text):
     banned = ['Конкурс', 'конкурс', 'викторина', 'Викторина',
               'победил', 'Победил', 'победитель', 'Победитель', 'Розыгрыши', 'розыгрышы',
-              'СТОП', 'Забрали', 'Отдано', 'Стоп', 'ЗАБРАЛИ', 'ОТДАНО', 'спасли', 'Спасли', 'СПАСЛИ']
+              'СТОП', 'Забрали', 'Отдано', 'Стоп', 'ЗАБРАЛИ', 'ОТДАНО', 'спасли', 'Спасли', 'СПАСЛИ', 'стоп', 'СПБ',
+              'спб', 'СПб', 'Петербург', 'Санкт-Петербург']
 
     for word in banned:
         if word in text:
@@ -62,19 +63,21 @@ def has_banned_words(text):
     return False
 
 
+def difference(list1, list2):
+    list_dif = [i for i in list1 + list2 if i not in list1 or i not in list2]
+    return list_dif
+
+
 def get_posts(owner_id, vkapi, count, query, adress):
-    global offset
+    global savedPostsList
     post_texts = []
     adress_user = convert_adress_to_coordinates(city + adress)
 
     convert_string_to_list("рис, еда, вода, пиво сухарики")
 
     posts_list = vkapi.wall.search(
-        owner_id=owner_id, count=count, query=query, v=5.92, offset=offset)['items']
+        owner_id=owner_id, count=count, query=query, v=5.92)['items']
 
-    offset += 1
-
-    print(offset)
     for item in posts_list:
         if item['post_type'] == 'post':
             if not has_banned_words(item['text']):
@@ -83,7 +86,8 @@ def get_posts(owner_id, vkapi, count, query, adress):
                 if item['date'] > (int(now) - 150 * 60 * 60):
                     # проверить:
                     post = item['text']
-                    print(post + "\n")
+                    print(post)
+
                 adress_distribution = parse_adress_from_photo(item)
                 if adress_distribution and adress_user:
                     distance = haversine(adress_distribution, adress_user)
@@ -97,6 +101,9 @@ def get_posts(owner_id, vkapi, count, query, adress):
                 else:
                     post_texts.append({'post': item['text'], 'date': item['date'],
                                        'url': 'https://vk.com/wall{}_{}'.format(item['owner_id'], item['id'])})
+
+    for diff in difference(savedPostsList, post_texts):
+        savedPostsList.append(diff)
 
     return post_texts
 
@@ -146,3 +153,12 @@ def haversine(coord1, coord2):
 
 print(get_posts(owner_id='-109125816', vkapi=vkapi,
                 count=20, query='Молоко', adress=""))
+
+"""def test():
+    get_posts(owner_id='-109125816', vkapi=vkapi,
+              count=20, query='Молоко', adress="")
+    time.sleep(10)
+    test()
+
+
+test()"""
