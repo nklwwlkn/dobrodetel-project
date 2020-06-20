@@ -3,7 +3,6 @@ import json
 import math
 import time
 
-
 from geopy.geocoders import Nominatim
 
 now = str(time.time()).split('.')[0]
@@ -80,18 +79,24 @@ def get_posts(owner_id, vkapi, count, query, adress):
         if item['post_type'] == 'post':
             if not has_banned_words(item['text']):
                 # проверить:
-
                 print(int(item['date']), (int(now) - 72 * 60 * 60))
                 if item['date'] > (int(now) - 150 * 60 * 60):
                     # проверить:
-                    post_texts.append({'post': item['text'], 'date': item['date'],
-                                       'url': 'https://vk.com/wall{}_{}'.format(item['owner_id'], item['id'])})
                     post = item['text']
                     print(post + "\n")
                 adress_distribution = parse_adress_from_photo(item)
                 if adress_distribution and adress_user:
                     distance = haversine(adress_distribution, adress_user)
-                    print(distance)
+                    if distance <= radius * 1000:
+                        post_texts.insert(0, {'post': item['text'], 'date': item['date'],
+                                              'url': 'https://vk.com/wall{}_{}'.format(item['owner_id'], item['id'])})
+                    else:
+                        post_texts.append({'post': item['text'], 'date': item['date'],
+                                           'url': 'https://vk.com/wall{}_{}'.format(item['owner_id'], item['id'])})
+
+                else:
+                    post_texts.append({'post': item['text'], 'date': item['date'],
+                                       'url': 'https://vk.com/wall{}_{}'.format(item['owner_id'], item['id'])})
 
     return post_texts
 
