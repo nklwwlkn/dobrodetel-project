@@ -11,7 +11,6 @@ access_token = "28f1ebfa28f1ebfa28f1ebfad528835af6228f128f1ebfa761ce2e835425078a
 session = vk.Session(access_token=access_token)
 vkapi = vk.API(session)
 geolocator = Nominatim(user_agent="dobrodetel")
-city = "Москва,"
 
 radius = 30
 street = ""
@@ -71,7 +70,7 @@ def difference(list1, list2):
 def get_posts(owner_id, vkapi, count, query, adress):
     global savedPostsList
     post_texts = []
-    adress_user = convert_adress_to_coordinates(city + adress)
+    adress_user = convert_adress_to_coordinates(adress)
 
     convert_string_to_list("рис, еда, вода, пиво сухарики")
 
