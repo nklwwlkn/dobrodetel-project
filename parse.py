@@ -12,7 +12,7 @@ session = vk.Session(access_token=access_token)
 vkapi = vk.API(session)
 geolocator = Nominatim(user_agent="dobrodetel")
 
-radius = 30
+radius = 130
 street = ""
 
 catalogList = []
@@ -72,8 +72,6 @@ def get_posts(owner_id, vkapi, count, query, adress):
     post_texts = []
     adress_user = convert_adress_to_coordinates(adress)
 
-    convert_string_to_list("рис, еда, вода, пиво сухарики")
-
     posts_list = vkapi.wall.search(
         owner_id=owner_id, count=count, query=query, v=5.92)['items']
 
@@ -82,29 +80,25 @@ def get_posts(owner_id, vkapi, count, query, adress):
             if not has_banned_words(item['text']):
                 # проверить:
                 print(int(item['date']), (int(now) - 72 * 60 * 60))
-                if item['date'] > (int(now) - 150 * 60 * 60):
+                if item['date'] > (int(now) - 72 * 60 * 60):
                     # проверить:
                     post = item['text']
 
-
-                adress_distribution = parse_adress_from_photo(item)
-                if adress_distribution and adress_user:
-                    distance = haversine(adress_distribution, adress_user)
-                    if distance <= radius * 1000:
-                        post_texts.insert(0, {'post': item['text'], 'date': item['date'],
-                                              'url': 'https://vk.com/wall{}_{}'.format(item['owner_id'], item['id'])})
-                        print(post)
-                        print(distance)
-                    """else:
-                        post_texts.append({'post': item['text'], 'date': item['date'],
-                                           'url': 'https://vk.com/wall{}_{}'.format(item['owner_id'], item['id'])})
-
-                else:
                     post_texts.append({'post': item['text'], 'date': item['date'],
-                                       'url': 'https://vk.com/wall{}_{}'.format(item['owner_id'], item['id'])})"""
+                                       'url': 'https://vk.com/wall{}_{}'.format(item['owner_id'], item['id'])})
 
-    for diff in difference(savedPostsList, post_texts):
-        savedPostsList.append(diff)
+                    print(post)
+                    print('https://vk.com/wall{}_{}'.format(item['owner_id'], item['id']))
+
+                    """adress_distribution = parse_adress_from_photo(item)
+                    if adress_distribution and adress_user:
+                        distance = haversine(adress_distribution, adress_user)
+                        if distance <= radius * 1000:
+                            post_texts.append({'post': item['text'], 'date': item['date'],
+                                               'url': 'https://vk.com/wall{}_{}'.format(item['owner_id'], item['id'])})
+
+                            print(post)
+                            print('https://vk.com/wall{}_{}'.format(item['owner_id'], item['id']))"""
 
     return post_texts
 
@@ -153,13 +147,4 @@ def haversine(coord1, coord2):
 
 
 print(get_posts(owner_id='-109125816', vkapi=vkapi,
-                count=50, query='молоко', adress=""))
-
-"""def test():
-    get_posts(owner_id='-109125816', vkapi=vkapi,
-              count=20, query='Молоко', adress="")
-    time.sleep(10)
-    test()
-
-
-test()"""
+                count=50, query='хлеб', adress="Москва, м. Комсомольская"))
