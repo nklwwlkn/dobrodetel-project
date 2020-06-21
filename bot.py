@@ -43,7 +43,9 @@ def convert_list_to_sting(data_list):
 
 
 def get_from_user_posts(user_id, address, message=None):
-    posts_list = get_product_list(dbs.get_user_category(user_id))
+    category_text = dbs.get_user_category(user_id)[0]
+    category_text = convert_string_to_list(category_text)
+    posts_list = get_product_list(category_text)
     # posts_list = get_posts(owner_id='-109125816', vkapi=vkapi, count=10, query='Хлеб', adress=address)
     if len(posts_list) > 0:
         for post in posts_list:
