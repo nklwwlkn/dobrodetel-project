@@ -9,9 +9,33 @@ class DBHelper:
 
     def setup(self):
         tblstmt = "CREATE TABLE IF NOT EXISTS userInfo (user_id INTEGER PRIMARY KEY NOT NULL, user_street text,user_radius INTEGER,user_category text)"
-        #liststmt = "CREATE TABLE IF NOT EXISTS lastSavedList (user_id INTEGER PRIMARY KEY NOT NULL, user_street text)"
+        #liststmt = "DROP TABLE IF EXISTS dataPosts"
+        liststmt = "CREATE TABLE IF NOT EXISTS dataPosts (user_id INTEGER PRIMARY KEY NOT NULL, date_post text,url_post text )"
         self.conn.execute(tblstmt)
-        #self.conn.execute(liststmt)
+        self.conn.execute(liststmt)
+        self.conn.commit()
+
+    def create_posts(self,user_id,date_post,url_post):
+        stmt = "INSERT OR IGNORE INTO dataPosts (user_id, date_post,url_post) VALUES (?, ?, ?)"
+        args = (user_id, date_post, url_post)
+        self.conn.execute(stmt, args)
+        self.conn.commit()
+
+    def get_all_posts(self):
+        cursorObj = self.conn.cursor()
+        cursorObj.execute('SELECT * FROM dataPosts')
+        rows = cursorObj.fetchall()
+        get_list_time = []
+        get_list_url = []
+        for row in rows:
+            get_list_time.append(row[1])
+            get_list_url.append(row[2])
+        return get_list_time, get_list_url
+
+    def update_post(self, user_id,date_post,url_post):
+        stmt = "UPDATE dataPosts SET date_post = (?) ,url_post = (?)  WHERE user_id = (?)"
+        args = (date_post,url_post,user_id)
+        self.conn.execute(stmt, args)
         self.conn.commit()
 
     def is_user_register(self, user_id):
@@ -28,9 +52,11 @@ class DBHelper:
         cursorObj.execute('SELECT * FROM userInfo')
         rows = cursorObj.fetchall()
         get_list_id = []
+        get_list_category = []
         for row in rows:
             get_list_id.append(row[0])
-        return get_list_id
+            get_list_category.append(row[3])
+        return get_list_id, get_list_category
 
 
     def register_user(self, user_id, user_street, user_radius, user_category):
