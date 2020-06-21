@@ -26,6 +26,7 @@ def callback_inline_first(message):
 @bot.message_handler(commands=['start'])
 def send_welcome(message):
     dbs.setup()
+    print("Debug Mode chat id: ", message.chat.id)
     keyboard = types.InlineKeyboardMarkup()  # наша клавиатура
     key_yes = types.InlineKeyboardButton(text='Далее', callback_data='continue')  # кнопка
     keyboard.add(key_yes)  # добавляем кнопку в клавиатуру
