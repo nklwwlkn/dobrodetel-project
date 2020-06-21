@@ -88,7 +88,8 @@ def get_posts(owner_id, vkapi, count, query, adress):
                                        'url': 'https://vk.com/wall{}_{}'.format(item['owner_id'], item['id'])})
 
                     print(post)
-                    print('https://vk.com/wall{}_{}'.format(item['owner_id'], item['id']))
+                    print(
+                        'https://vk.com/wall{}_{}'.format(item['owner_id'], item['id']))
 
                     """adress_distribution = parse_adress_from_photo(item)
                     if adress_distribution and adress_user:
