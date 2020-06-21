@@ -23,6 +23,16 @@ class DBHelper:
         else:
             return True
 
+    def get_all_user(self):
+        cursorObj = self.conn.cursor()
+        cursorObj.execute('SELECT * FROM userInfo')
+        rows = cursorObj.fetchall()
+        get_list_id = []
+        for row in rows:
+            get_list_id.append(row[0])
+        return get_list_id
+
+
     def register_user(self, user_id, user_street, user_radius, user_category):
         stmt = "SELECT * FROM userInfo WHERE user_id = (?)"
         args = (user_id,)

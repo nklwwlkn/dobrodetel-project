@@ -2,22 +2,30 @@ import schedule
 import requests
 import datetime
 from parse import *
+from db import *
 
-now = datetime.datetime.now()
+nows = datetime.datetime.now()
+
+dbs = DBHelper()
+
 
 def telegram_bot_sendtext(bot_message):
     bot_token = '948522010:AAG3dBL2W-NWPpdnOnuj-a15lOZ0dWlAv1o'
-    bot_chatID = '551358615'
-    send_text = 'https://api.telegram.org/bot' + bot_token + '/sendMessage?chat_id=' + bot_chatID + '&parse_mode=Markdown&text=' + bot_message
+    list_id = dbs.get_all_user()
+    for user_id in list_id:
+        bot_chatID = str(user_id)
+        send_text = 'https://api.telegram.org/bot' + bot_token + '/sendMessage?chat_id=' + bot_chatID + '&parse_mode=Markdown&text=' + bot_message
 
-    response = requests.get(send_text)
-
-    return response.json()
+        requests.get(send_text)
 
 
 def report():
+    dbs.setup()
+    # dbs.get_all_user()
+    print("Good joob")
+
     posts_list = get_posts(owner_id='-109125816', vkapi=vkapi,
-              count=10, query='хлеб', adress="Москва, м. Комсомольская")
+                           count=10, query='хлеб', adress="Москва, м. Комсомольская")
 
     if len(posts_list) > 0:
         for post in posts_list:
@@ -27,7 +35,7 @@ def report():
             telegram_bot_sendtext(my_message)
 
 
-schedule.every().day.at("0{}:{}:{}".format(now.hour,now.minute,now.second + 20)).do(report)
+schedule.every(10).seconds.do(report)
 
 while True:
     schedule.run_pending()
